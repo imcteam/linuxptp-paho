@@ -65,6 +65,36 @@
 #define QOS         0
 #define TIMEOUT     10000L
 
+#define CLIENTID2    "Phc2sysSub"
+#define TOPIC2       "Phc2sysSub"
+
+volatile MQTTClient_deliveryToken deliveredtoken;
+
+void delivered(void *context, MQTTClient_deliveryToken dt)
+{
+    printf("Message with token value %d delivery confirmed\n", dt);
+    deliveredtoken = dt;
+}
+
+int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message)
+{
+    printf("Message arrived\n");
+    printf("     topic: %s\n", topicName);
+    printf("   message: %.*s\n", message->payloadlen, (char*)message->payload);
+    MQTTClient_freeMessage(&message);
+    MQTTClient_free(topicName);
+    return 1;
+}
+
+void connlost(void *context, char *cause)
+{
+    printf("\nConnection lost\n");
+    printf("     cause: %s\n", cause);
+}
+
+MQTTClient client2;
+MQTTClient_connectOptions conn_opts2 = MQTTClient_connectOptions_initializer;
+
 MQTTClient client;
 MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
 MQTTClient_message pubmsg = MQTTClient_message_initializer;
@@ -1403,7 +1433,7 @@ int main(int argc, char *argv[])
         MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTCLIENT_SUCCESS)
     {
          printf("Failed to create client, return code %d\n", rc);
-         exit(EXIT_FAILURE);
+         //exit(EXIT_FAILURE);
     }
 
 	conn_opts.keepAliveInterval = 20;
@@ -1411,7 +1441,30 @@ int main(int argc, char *argv[])
     if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
     {
         printf("Failed to connect, return code %d\n", rc);
-        exit(EXIT_FAILURE);
+        //exit(EXIT_FAILURE);
+    }
+//mqtt sub lcf
+    if ((rc = MQTTClient_create(&client2, ADDRESS, CLIENTID2,
+        MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTCLIENT_SUCCESS)
+    {
+        printf("Failed to create client, return code %d\n", rc);
+    }
+
+    if ((rc = MQTTClient_setCallbacks(client2, NULL, connlost, msgarrvd, delivered)) != MQTTCLIENT_SUCCESS)
+    {
+        printf("Failed to set callbacks, return code %d\n", rc);
+    }
+
+    conn_opts2.keepAliveInterval = 20;
+    conn_opts2.cleansession = 1;
+    if ((rc = MQTTClient_connect(client2, &conn_opts2)) != MQTTCLIENT_SUCCESS)
+    {
+        printf("Failed to connect, return code %d\n", rc);
+    }
+
+	if ((rc = MQTTClient_subscribe(client2, TOPIC2, QOS)) != MQTTCLIENT_SUCCESS)
+    {
+    	printf("Failed to subscribe, return code %d\n", rc);
     }
 
 	char *config = NULL, *dst_name = NULL, *progname, *src_name = NULL;
@@ -1733,6 +1786,11 @@ bad_usage:
 	usage(progname);
 	config_destroy(cfg);
 		//lcf
+	if ((rc = MQTTClient_disconnect(client2, 10000)) != MQTTCLIENT_SUCCESS)
+    {
+    	printf("Failed to disconnect, return code %d\n", rc);
+    }
+    MQTTClient_destroy(&client2);
 	if ((rc = MQTTClient_disconnect(client, 10000)) != MQTTCLIENT_SUCCESS)
     	printf("Failed to disconnect, return code %d\n", rc);
     MQTTClient_destroy(&client);
