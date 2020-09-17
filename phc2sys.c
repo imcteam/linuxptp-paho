@@ -60,9 +60,9 @@
 //lcf
 #include "MQTTClient.h"
 #define ADDRESS     "tcp://0.0.0.0:1883"
-#define CLIENTID    "ExampleClientPub2"
-#define TOPIC       "MQTT Examples2"
-#define QOS         1
+#define CLIENTID    "Phc2sysPub"
+#define TOPIC       "Phc2sysPub"
+#define QOS         0
 #define TIMEOUT     10000L
 
 MQTTClient client;

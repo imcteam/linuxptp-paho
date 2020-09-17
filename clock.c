@@ -47,9 +47,9 @@
 //lcf
 #include "MQTTClient.h"
 #define ADDRESS     "tcp://0.0.0.0:1883"
-#define CLIENTID    "ExampleClientPub"
-#define TOPIC       "MQTT Examples"
-#define QOS         1
+#define CLIENTID    "Ptp4lPub"
+#define TOPIC       "Ptp4lPub"
+#define QOS         0
 #define TIMEOUT     10000L
 
 #define N_CLOCK_PFD (N_POLLFD + 1) /* one extra per port, for the fault timer */
